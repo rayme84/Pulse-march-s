@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Pulse">
+<meta name="theme-color" content="#0b0d10">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<title>Pulse Marchés</title>
+<style>
+  :root{
+    --bg:#0b0d10; --card:#14171c; --card2:#1b1f26; --line:#262b33;
+    --txt:#e9ecf1; --mut:#8b93a1; --up:#2fbf71; --down:#ef5a5f;
+    --gold:#d4a84b; --hi:#ef5a5f; --mid:#e0a43a; --lo:#5b8def;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased}
+  body{max-width:480px;margin:0 auto;padding-bottom:calc(40px + env(safe-area-inset-bottom));padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+  header{padding:14px 16px 8px}
+  .brand{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+  h1{font-size:24px;font-weight:700;letter-spacing:-.3px}
+  h1 span{color:var(--gold)}
+  .stamp{font-size:12px;color:var(--mut);text-align:right}
+  .status{margin-top:8px;font-size:12px;color:var(--mut);display:flex;align-items:center;gap:7px}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--up);flex:0 0 auto}
+  .dot.stale{background:var(--mid)} .dot.off{background:var(--mut)}
+
+  .ticker{display:flex;gap:8px;overflow-x:auto;padding:8px 16px 12px;scrollbar-width:none}
+  .ticker::-webkit-scrollbar{display:none}
+  .tk{flex:0 0 auto;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 10px;min-width:92px}
+  .tk .n{font-size:11px;color:var(--mut)}
+  .tk .v{font-size:14.5px;font-weight:600;margin-top:2px;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .tk .c{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
+  .up{color:var(--up)} .down{color:var(--down)} .flat{color:var(--mut)}
+
+  .key{margin:0 16px 14px;background:linear-gradient(180deg,#1d1a12,#16140f);border:1px solid #3a3020;border-radius:14px;padding:14px}
+  .keyhead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+  .key h2{font-size:13px;color:var(--gold);text-transform:uppercase;letter-spacing:.6px}
+  .mood{font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap}
+  .mood.off{background:rgba(239,90,95,.15);color:var(--hi)}
+  .mood.on{background:rgba(47,191,113,.15);color:var(--up)}
+  .mood.neu{background:rgba(139,147,161,.18);color:#c3c8d1}
+  .key p{font-size:15px;line-height:1.45}
+  .key ul{margin-top:8px;padding-left:18px}
+  .key li{font-size:13.5px;line-height:1.45;color:#d6d9df;margin:3px 0}
+
+  .filters{position:sticky;top:0;z-index:5;background:rgba(11,13,16,.94);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    padding:8px 16px;display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--line)}
+  .filters::-webkit-scrollbar{display:none}
+  .chip{flex:0 0 auto;border:1px solid var(--line);background:var(--card);color:var(--txt);font-size:13.5px;padding:7px 12px;border-radius:999px;cursor:pointer;font-family:inherit}
+  .chip.on{background:var(--txt);color:#0b0d10;border-color:var(--txt);font-weight:600}
+  .toggle{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 2px;font-size:13px;color:var(--mut)}
+  .sw{position:relative;width:42px;height:24px;background:var(--line);border-radius:999px;cursor:pointer;border:0}
+  .sw::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .15s}
+  .sw.on{background:var(--hi)} .sw.on::after{left:21px}
+
+  .list{padding:8px 16px 0}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 14px;margin:10px 0}
+  .meta{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mut);margin-bottom:6px;flex-wrap:wrap}
+  .imp{font-weight:700;font-size:11px;padding:2px 7px;border-radius:6px;letter-spacing:.3px}
+  .imp.h{background:rgba(239,90,95,.15);color:var(--hi)}
+  .imp.m{background:rgba(224,164,58,.15);color:var(--mid)}
+  .imp.l{background:rgba(91,141,239,.15);color:var(--lo)}
+  .new{font-size:10.5px;font-weight:700;color:#0b0d10;background:var(--gold);padding:1px 6px;border-radius:5px}
+  .cat{color:#c3c8d1}
+  .card h3{font-size:16px;line-height:1.35;font-weight:650;margin-bottom:6px}
+  .card p.sum{font-size:14px;line-height:1.45;color:#cfd3da}
+  .assets{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+  .as{font-size:12px;font-weight:600;padding:3px 8px;border-radius:6px;background:var(--card2);border:1px solid var(--line)}
+  .more{margin-top:10px;background:none;border:0;color:var(--gold);font-size:13.5px;font-weight:600;cursor:pointer;padding:0;font-family:inherit}
+  .why{display:none;margin-top:9px;padding-top:9px;border-top:1px solid var(--line);font-size:13.5px;line-height:1.5;color:#d6d9df}
+  .why.open{display:block}
+  .why p{margin-bottom:8px} .why b{color:var(--txt)}
+  .src{font-size:12px;color:var(--mut)} .src a{color:var(--mut)}
+
+  .sec{padding:18px 16px 4px;font-size:13px;color:var(--mut);text-transform:uppercase;letter-spacing:.6px}
+  .day{margin:0 16px 10px;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .day .dh{padding:10px 14px;font-size:13.5px;font-weight:650;background:var(--card2)}
+  .ev{display:flex;gap:12px;padding:10px 14px;border-top:1px solid var(--line);align-items:flex-start}
+  .ev .t{flex:0 0 50px;font-weight:650;font-variant-numeric:tabular-nums;font-size:14px}
+  .ev .d{flex:1;font-size:14px;line-height:1.4}
+  .ev .d small{display:block;color:var(--mut);font-size:12.5px;margin-top:2px}
+  .stars{flex:0 0 auto;font-size:11px;color:var(--hi);letter-spacing:1px;padding-top:2px}
+  .empty{color:var(--mut);font-size:14px;padding:28px 8px;text-align:center;line-height:1.5}
+  footer{padding:18px 16px 0;font-size:11.5px;color:var(--mut);line-height:1.5}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <h1>Pulse <span>Marchés</span></h1>
+    <div class="stamp" id="stamp"></div>
+  </div>
+  <div class="status" id="status"><span class="dot off"></span><span>Chargement…</span></div>
+</header>
+
+<div class="ticker" id="ticker"></div>
+<section class="key" id="key" style="display:none"></section>
+
+<nav class="filters" id="filters">
+  <button class="chip on" data-f="all">Tout</button>
+  <button class="chip" data-f="idx">Indices</button>
+  <button class="chip" data-f="cmd">Matières premières</button>
+  <button class="chip" data-f="cry">Crypto</button>
+  <button class="chip" data-f="agenda">Agenda</button>
+</nav>
+
+<div class="toggle" id="tgwrap">
+  <span>Impact fort uniquement</span>
+  <button class="sw" id="sw" aria-label="Impact fort uniquement"></button>
+</div>
+
+<main class="list" id="list"></main>
+<section id="agenda"></section>
+
+<footer>
+  Heures en heure de Paris. Mises à jour automatiques toutes les 2 heures, de 7 h à 23 h en semaine. Résumés rédigés à partir des sources liées sous chaque actu ; les prix sont des instantanés au moment de la mise à jour, pas des cotations en direct. Rien ici n'est un conseil d'investissement.
+</footer>
+
+<script>
+const $ = s => document.querySelector(s);
+const raw = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+// texte : échappé + espaces insécables dans "4 021 $", "0,4 %"…
+const esc = s => raw(s).replace(/(\d) (?=\d{3}(?!\d))/g, "$1&nbsp;").replace(/ (\$|%|€|pb|Md\$|M\$)/g, "&nbsp;$1");
+const safeUrl = u => /^https?:\/\//i.test(String(u||"")) ? raw(u) : "#";
+const fmtPct = c => (c>0?"+":c<0?"−":"") + String(Math.abs(c)).replace(".",",") + " %";
+
+let FEED = null, filter = "all", strong = false;
+
+function ago(iso){
+  const t = Date.parse(iso); if (isNaN(t)) return null;
+  return Math.max(0, Math.round((Date.now()-t)/60000));
+}
+function agoText(m){
+  if (m == null) return "";
+  if (m < 1) return "à l'instant";
+  if (m < 60) return `il y a ${m} min`;
+  const h = Math.floor(m/60), r = m%60;
+  return `il y a ${h} h${r?String(r).padStart(2,"0"):""}`;
+}
+
+function renderStatus(){
+  if (!FEED) return;
+  const m = ago(FEED.updatedAt);
+  const stale = m != null && m > 150;
+  $("#stamp").textContent = FEED.updatedLabel || "";
+  $("#status").innerHTML = `<span class="dot ${stale?'stale':''}"></span><span>Mis à jour ${esc(agoText(m))}${stale?" · en attente de la prochaine mise à jour":""}</span>`;
+}
+
+function renderHead(){
+  const T = FEED.ticker || [];
+  $("#ticker").innerHTML = T.map(t=>{
+    const cls = typeof t.c === "number" ? (t.c>0?"up":t.c<0?"down":"flat") : "flat";
+    const ch = typeof t.c === "number" ? fmtPct(t.c) : esc(t.note||"");
+    return `<div class="tk"><div class="n">${esc(t.n)}</div><div class="v">${esc(t.v)}</div><div class="c ${cls}">${ch}</div></div>`;
+  }).join("");
+
+  const E = FEED.essentiel || {};
+  const moodCls = {off:"off", on:"on"}[FEED.mood?.tone] || "neu";
+  $("#key").style.display = "";
+  $("#key").innerHTML = `
+    <div class="keyhead"><h2>L'essentiel</h2>${FEED.mood?.label?`<span class="mood ${moodCls}">${esc(FEED.mood.label)}</span>`:""}</div>
+    <p>${esc(E.text)}</p>
+    ${(E.bullets||[]).length?`<ul>${E.bullets.map(b=>`<li>${esc(b)}</li>`).join("")}</ul>`:""}`;
+}
+
+function agendaHTML(){
+  const A = FEED.agenda || [];
+  if (!A.length) return "";
+  return `<div class="sec">Agenda — heure de Paris</div>` + A.map(d=>`
+    <div class="day"><div class="dh">${esc(d.day)}</div>
+      ${(d.ev||[]).map(e=>`<div class="ev"><div class="t">${esc(e.t)}</div>
+        <div class="d">${esc(e.d)}${e.s?`<small>${esc(e.s)}</small>`:""}</div>
+        <div class="stars">${"●".repeat(Math.max(1,Math.min(3,e.st|0)))}</div></div>`).join("")}
+    </div>`).join("");
+}
+
+function renderList(){
+  if (!FEED) return;
+  const isAgenda = filter === "agenda";
+  $("#tgwrap").style.display = isAgenda ? "none" : "flex";
+  $("#agenda").innerHTML = (isAgenda || filter === "all") ? agendaHTML() : "";
+  if (isAgenda){ $("#list").innerHTML = ""; return; }
+
+  const items = (FEED.news||[]).filter(n => (!strong || n.imp==="h") && (filter==="all" || n.cat===filter));
+  const lbl = {h:"FORT", m:"MOYEN", l:"FAIBLE"};
+  $("#list").innerHTML = items.length ? items.map((n,i)=>`
+    <article class="card">
+      <div class="meta"><span class="imp ${esc(n.imp)}">${lbl[n.imp]||""}</span>${n.isNew?`<span class="new">NOUVEAU</span>`:""}<span>${esc(n.time)}</span><span>·</span><span class="cat">${esc(n.label)}</span></div>
+      <h3>${esc(n.title)}</h3>
+      <p class="sum">${esc(n.sum)}</p>
+      <div class="assets">${(n.assets||[]).map(a=>{const d=a[1]; return `<span class="as ${d==='up'?'up':d==='down'?'down':'flat'}">${esc(a[0])} ${d==='up'?'▲':d==='down'?'▼':'•'}</span>`}).join("")}</div>
+      <button class="more" data-i="${i}">Pourquoi ça compte ›</button>
+      <div class="why" id="w${i}">
+        ${(n.why||[]).map(w=>`<p>${w.k?`<b>${esc(w.k)} :</b> `:""}${esc(w.t)}</p>`).join("")}
+        <div class="src">Sources : ${(n.src||[]).map(s=>`<a href="${safeUrl(s[1])}" target="_blank" rel="noopener">${esc(s[0])}</a>`).join(" · ")}</div>
+      </div>
+    </article>`).join("")
+    : `<div class="empty">Aucune actu à impact fort dans cette catégorie pour l'instant.</div>`;
+
+  document.querySelectorAll(".more").forEach(b => b.onclick = () => {
+    const o = $("#w"+b.dataset.i).classList.toggle("open");
+    b.textContent = o ? "Masquer ‹" : "Pourquoi ça compte ›";
+  });
+}
+
+function renderAll(){ renderStatus(); renderHead(); renderList(); }
+
+function showMessage(msg){
+  $("#status").innerHTML = `<span class="dot off"></span><span>${esc(msg)}</span>`;
+  $("#list").innerHTML = `<div class="empty">${esc(msg)}</div>`;
+}
+
+document.querySelectorAll(".chip").forEach(c => c.onclick = () => {
+  document.querySelectorAll(".chip").forEach(x => x.classList.remove("on"));
+  c.classList.add("on"); filter = c.dataset.f; renderList();
+});
+$("#sw").onclick = () => { strong = !strong; $("#sw").classList.toggle("on", strong); renderList(); };
+setInterval(renderStatus, 60000);
+
+// ---------- chargement des données (feed.json, publié toutes les 2 h) ----------
+let lastStamp = null, loading = false;
+async function load(){
+  if (loading) return; loading = true;
+  try{
+    const r = await fetch("feed.json?t=" + Date.now(), {cache:"no-store"});
+    if (!r.ok) throw new Error(r.status);
+    const data = await r.json();
+    if (data.updatedAt !== lastStamp){ lastStamp = data.updatedAt; FEED = data; renderAll(); }
+    else renderStatus();
+  }catch(e){
+    if (FEED) $("#status").innerHTML = `<span class="dot stale"></span><span>Hors connexion · actus de ${esc(agoText(ago(FEED.updatedAt)))}</span>`;
+    else showMessage("Impossible de charger les actus. Vérifie ta connexion puis rouvre l'app.");
+  }finally{ loading = false; }
+}
+load();
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") load(); });
+setInterval(load, 5*60*1000);
+</script>
+</body>
+</html>
